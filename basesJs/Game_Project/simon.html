@@ -1,0 +1,149 @@
+<html>
+  <head>
+    <title>Remember keys</title>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+    <link rel="stylesheet" href="simon.css">
+  </head>
+  <body>
+    <div class="keyboard">
+      <div class="row">
+        <div class="key" data-key="81">q</div>
+        <div class="key" data-key="87">w</div>
+        <div class="key" data-key="69">e</div>
+        <div class="key" data-key="82">r</div>
+        <div class="key" data-key="84">t</div>
+        <div class="key" data-key="89">y</div>
+        <div class="key" data-key="85">u</div>
+        <div class="key" data-key="73">i</div>
+        <div class="key" data-key="79">o</div>
+        <div class="key" data-key="80">p</div>
+      </div>
+      <div class="row">
+        <div class="key" data-key="65">a</div>
+        <div class="key" data-key="83">s</div>
+        <div class="key" data-key="68">d</div>
+        <div class="key" data-key="70">f</div>
+        <div class="key" data-key="71">g</div>
+        <div class="key" data-key="72">h</div>
+        <div class="key" data-key="74">j</div>
+        <div class="key" data-key="75">k</div>
+        <div class="key" data-key="76">l</div>
+      </div>
+      <div class="row last">
+        <div class="key" data-key="90">z</div>
+        <div class="key" data-key="88">x</div>
+        <div class="key" data-key="67">c</div>
+        <div class="key" data-key="86">v</div>
+        <div class="key" data-key="66">b</div>
+        <div class="key" data-key="78">n</div>
+        <div class="key" data-key="77">m</div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <script>
+      const niveles = 3
+      let teclas = generarTeclas(niveles)
+
+//funcion para detectar en que nivel estamos
+//y a cual vamos a pasar
+//mostrando un mensaje avisando el cambio de nivel
+      function siguienteNivel(nivelActual) {
+        if(nivelActual == niveles) {
+          return swal("Good Job!", "You Win!", "success")
+        }
+        swal({
+          title: `Level ${nivelActual + 1}`,
+          buttons: false,
+          timer: 1000
+        })
+
+        for(let i = 0; i <= nivelActual; i++){
+          setTimeout(() => activate(teclas[i]),1000 * (i+1) + 1000)
+        }
+
+//funcion que escucha los eventos del teclado
+//para saber que tecla presionamos
+//y saber si esa tecla es la misma que debe ser presionada
+//ilumina de verde si la tecla es correcta
+//y de rojo si es incorrecta
+//muestra un mesaje si el usuario se ha equivocado
+//diciendo que ha perdidio
+        let i = 0
+        let teclaActual = teclas[i]
+        window.addEventListener('keydown', onkeydown)
+        function onkeydown(ev) {
+          if(ev.keyCode == teclaActual) {
+            activate(teclaActual, { success: true })
+            i++
+            if(i > nivelActual) {
+              window.removeEventListener('keydown', onkeydown)
+              setTimeout(() => siguienteNivel(i),1500)
+            }
+            teclaActual = teclas[i]
+          } else {
+            activate(ev.keyCode, { fail: true })
+            window.removeEventListener('keydown', onkeydown)
+            swal({
+              title: "You Lost!",
+              text: "Do you want to play again?",
+              icon: "error",
+              buttons: {
+                No: "No!",
+                Yes: true
+              },
+            })
+            .then((value) => {
+              switch(value) {
+                case "No":
+                  swal("See you later", "thanks for playing")
+                break;
+                case "Yes":
+                  tecla = generarTeclas(niveles)
+                  siguienteNivel(0)
+                break;
+              }
+            })
+          }
+        }
+      }
+
+      siguienteNivel(0)
+
+//funcion que genera un total de teclas que es igual a la cantidad de niveles que hay en el juego
+      function generarTeclas(niveles) {
+        return new Array(niveles).fill(0).map(generarTeclaAleatoria)
+      }
+
+//funcion que hace el generado de las teclas de forma aleatoria con un minimo y un maximo que son los valores de keyCode de cada tecla
+      function generarTeclaAleatoria() {
+        const min = 65
+        const max = 90
+        return Math.round(Math.random() * (max - min) + min)
+      }
+
+//funcion que obtiene el valor keyCode de cada tecla 
+      function getElementByKeyCode(keyCode) {
+        return document.querySelector(`[data-key="${keyCode}"]`)
+      }
+
+//funcion que avtiva los botones dandoles un color para resaltarlos, verde si es correcto y rojo incorrecto
+//se agregan propiedades del archivo css
+      function activate(keyCode, opts = {}) {
+        const el = getElementByKeyCode(keyCode)
+        el.classList.add('active')
+        if(opts.success == true) {
+          el.classList.add('success')
+        } else if (opts.fail) {
+          el.classList.add('fail')
+        }
+        setTimeout(() => deactivate(el), 500)
+      }
+
+      function deactivate(el) {
+        el.className = 'key'
+      }
+    </script>
+  </body>
+</html>
